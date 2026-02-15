@@ -1,45 +1,48 @@
 {
     "coord": {
-        "lon": -46.6361,
-        "lat": -23.5475
+        "lon": -42.8019,
+        "lat": -5.0892
     },
     "weather": [
         {
-            "id": 800,
-            "main": "Clear",
-            "description": "clear sky",
-            "icon": "01n"
+            "id": 500,
+            "main": "Rain",
+            "description": "light rain",
+            "icon": "10n"
         }
     ],
     "base": "stations",
     "main": {
-        "temp": 24.01,
-        "feels_like": 24.45,
-        "temp_min": 23.75,
-        "temp_max": 25.2,
-        "pressure": 1020,
-        "humidity": 76,
-        "sea_level": 1020,
-        "grnd_level": 929
+        "temp": 24.84,
+        "feels_like": 25.68,
+        "temp_min": 24.84,
+        "temp_max": 24.84,
+        "pressure": 1012,
+        "humidity": 88,
+        "sea_level": 1012,
+        "grnd_level": 1001
     },
     "visibility": 10000,
     "wind": {
-        "speed": 2.57,
-        "deg": 90
+        "speed": 4.12,
+        "deg": 10
+    },
+    "rain": {
+        "1h": 0.86
     },
     "clouds": {
-        "all": 0
+        "all": 100
     },
-    "dt": 1770949078,
+    "dt": 1771124821,
     "sys": {
         "type": 1,
-        "id": 8394,
+        "id": 8447,
         "country": "BR",
-        "sunrise": 1770886366,
-        "sunset": 1770932938
+        "sunrise": 1771145848,
+        "sunset": 1771190008
     },
     "timezone": -10800,
-    "id": 3448439,
-    "name": "S\u00e3o Paulo",
+    "id": 3386496,
+    "name": "Teresina",
     "cod": 200
 }
