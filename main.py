@@ -16,9 +16,9 @@ load_dotenv(env_path)
  
 API_KEY = os.getenv('api_key')
  
-url = f'https://api.openweathermap.org/data/2.5/weather?q=Sao Paulo,BR&units=metric&appid={API_KEY}'
+url = f'https://api.openweathermap.org/data/2.5/weather?q=Teresina,BR&units=metric&appid={API_KEY}'
  
-table_name = 'sp_weather'
+table_name = 'the_weather'
  
 def pipeline():
     try:

@@ -6,8 +6,6 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-url = f'https://api.openweathermap.org/data/2.5/weather?q=Teresina,BR&units=metric&appid={API_KEY}'
-
 def extract_weather_data(url: str) -> dict | list:
     response = requests.get(url)
     data = response.json()

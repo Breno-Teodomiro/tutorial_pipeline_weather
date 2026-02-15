@@ -53,7 +53,7 @@ def create_dataframe(path_name:str) -> pd.DataFrame:
     logging.info(" => Criando Dataframe do arquivo JSON..")
     path = path_name
 
-    if not path.existis():
+    if not path.exists():
         raise FileNotFoundError(f"O arquivo {path} não foi encontrado!")
     
     with open(path) as f:
