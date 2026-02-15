@@ -6,7 +6,6 @@ import logging
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-API_KEY = '04f8114a79f8cef5db24e8e6ba5461e3'
 url = f'https://api.openweathermap.org/data/2.5/weather?q=Sao Paulo,BR&units=metric&appid={API_KEY}'
 
 
