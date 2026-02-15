@@ -33,7 +33,7 @@ def load_weather_data(table_name:str, df):
         index=False
     )
     
-    logging.info(f"✅ Dados carregados com sucesso!\n") 
+    logging.info("✅ Dados carregados com sucesso!\n") 
     
     df_check = pd.read_sql(f'SELECT * FROM {table_name}', con=engine)
     logging.info(f"Total de registros na tabela: {len(df_check)}\n")
