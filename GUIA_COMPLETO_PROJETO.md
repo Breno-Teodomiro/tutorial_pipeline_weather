@@ -189,3 +189,83 @@ Ordem recomendada para aprender este projeto:
 2. `GUIA_COMPLETO_PROJETO.md` (este arquivo)
 3. `GUIA_ETL_DOCKER_AIRFLOW.md` (fundamentos de arquitetura)
 4. `GUIA_DBT_WEATHER.md` (modelagem e documentação dbt)
+
+## 13) Como enviar para GitHub (recomendado via SSH)
+Se o `git push` falhar por credencial, configure SSH uma vez:
+
+1. Verificar se já existe chave:
+```bash
+ls -la ~/.ssh
+```
+
+2. Gerar chave (se não existir):
+```bash
+ssh-keygen -t ed25519 -C "seu_email_do_github"
+```
+
+3. Ativar agent e adicionar chave:
+```bash
+eval "$(ssh-agent -s)"
+ssh-add ~/.ssh/id_ed25519
+```
+
+4. Copiar chave pública:
+```bash
+cat ~/.ssh/id_ed25519.pub
+```
+
+5. Adicionar no GitHub:
+- GitHub -> `Settings` -> `SSH and GPG keys` -> `New SSH key`
+- Colar a chave copiada
+
+6. Testar conexão:
+```bash
+ssh -T git@github.com
+```
+
+7. Configurar remoto SSH no projeto:
+```bash
+git remote set-url origin git@github.com:Breno-Teodomiro/tutorial_pipeline_weather.git
+git remote -v
+```
+
+8. Enviar:
+```bash
+git push origin master
+```
+
+## 14) Rotina para desligar e retomar o ambiente
+Quando for desligar notebook:
+```bash
+docker compose down
+```
+
+Quando voltar no outro dia:
+1. Abrir terminal no projeto:
+```bash
+cd /home/admbr/projetos/tutorial_pipeline_weather
+```
+
+2. Subir ambiente:
+```bash
+docker compose up -d
+```
+
+3. Confirmar serviços:
+```bash
+docker compose ps
+```
+
+4. Acessar Airflow:
+- `http://localhost:8080`
+
+5. Validar última carga no DW:
+```bash
+docker compose exec -T weather-postgres psql -U admin -d weather_data -c "SELECT data_observacao, data_observacao_formatada FROM mart.mart_weather_readings ORDER BY data_observacao DESC LIMIT 5;"
+```
+
+6. (Opcional) rodar DAG manualmente após retomar:
+- Airflow UI -> `weather_pipeline` -> `Trigger DAG`
+
+### Dica
+Se o parser da DAG demorar após subir os containers, aguarde 30-60 segundos e atualize a UI.
