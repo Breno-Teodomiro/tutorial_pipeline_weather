@@ -1,0 +1,20 @@
+version: 2
+
+sources:
+  - name: raw
+    description: "Dados brutos vindos da API OpenWeather"
+    schema: raw
+    tables:
+      - name: weather_observations
+        description: "Tabela RAW carregada pela task de load no Airflow"
+
+models:
+  - name: stg_weather_observations
+    description: "Padronizacao inicial dos dados brutos com nomenclatura em portugues"
+    columns:
+      - name: id_cidade
+        description: "Identificador da cidade"
+        data_tests: [not_null]
+      - name: data_observacao
+        description: "Data/hora da observacao do clima"
+        data_tests: [not_null]

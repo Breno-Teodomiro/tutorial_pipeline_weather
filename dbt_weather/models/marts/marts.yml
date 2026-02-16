@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: mart_weather_readings
+    description: "Fato analitico de leituras climaticas em nivel de observacao"
+    columns:
+      - name: chave_grao_clima
+        description: "Chave tecnica da leitura"
+        data_tests: [not_null, unique]
+      - name: id_cidade
+        description: "Identificador da cidade"
+      - name: data_observacao
+        description: "Data/hora local de Brasilia (America/Sao_Paulo), sem offset"
+      - name: data_observacao_formatada
+        description: "Mesma data/hora em formato texto padrao YYYY-MM-DD HH24:MI:SS"
+      - name: temperatura_celsius
+        description: "Temperatura em graus celsius"
+
+  - name: mart_weather_daily_city
+    description: "Visao agregada diaria por cidade para dashboards"
+    columns:
+      - name: id_cidade
+        description: "Identificador da cidade"
+      - name: data_referencia
+        description: "Dia de referencia da agregacao"
+      - name: media_temperatura
+        description: "Media de temperatura do dia"

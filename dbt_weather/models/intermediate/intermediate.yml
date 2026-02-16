@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: int_weather_observations
+    description: "Camada intermediate com dados de clima padronizados para consumo analitico"
+    columns:
+      - name: chave_grao_clima
+        description: "Chave tecnica do grao cidade + data_observacao"
+        data_tests: [not_null, unique]
+      - name: id_cidade
+        description: "Identificador da cidade"
+        data_tests: [not_null]
+      - name: data_observacao
+        description: "Data/hora local de Brasilia (America/Sao_Paulo), sem offset"
+        data_tests: [not_null]

@@ -1,42 +1,55 @@
 # Tutorial Pipeline Weather
 
-Pipeline ETL de clima com Airflow + PostgreSQL, usando a API OpenWeather.
-
-## Objetivo
-Executar um fluxo `extract -> transform -> load`:
-- `extract`: consulta a API e salva JSON bruto.
-- `transform`: normaliza os dados e gera um parquet intermediario.
-- `load`: grava no banco PostgreSQL da aplicacao.
+Pipeline de dados climáticos com Airflow, PostgreSQL e dbt, estruturada em camadas de DW:
+- `raw`
+- `intermediate`
+- `mart`
 
 ## Arquitetura
-- Airflow executa e orquestra a DAG `weather_pipeline`.
-- `postgres` (container): banco de metadados do Airflow.
-- `weather-postgres` (container): banco da pipeline (`weather_data`).
-- `redis`: broker do CeleryExecutor.
+- `extract` (Python): consome OpenWeather e salva JSON bruto.
+- `transform` (Python): normaliza JSON em DataFrame.
+- `load` (Python): faz `upsert` incremental em `raw.weather_observations`.
+- `build_dw` (dbt): transforma `raw -> intermediate -> mart`.
 
-## Estrutura do projeto
+Orquestração:
+- DAG `weather_pipeline`: `extract >> transform >> load >> build_dw`.
+
+Infra:
+- `postgres`: metadados do Airflow.
+- `weather-postgres`: banco analítico do projeto (`weather_data`).
+- `redis`: broker do Celery.
+
+## Estrutura
 ```text
 .
 ├── config/
-│   └── .env
+│   ├── .env.example
+│   └── .env (local, nao versionado)
 ├── dags/
 │   └── weather_dag.py
 ├── src/
 │   ├── extract_data.py
 │   ├── transform_data.py
-│   └── load_data.py
-├── data/
+│   ├── load_data.py
+│   └── dbt_runner.py
+├── dbt_weather/
+│   ├── dbt_project.yml
+│   ├── profiles.yml
+│   └── models/
+│       ├── staging/
+│       ├── intermediate/
+│       └── marts/
 ├── docker-compose.yaml
 └── README.md
 ```
 
-## Pre-requisitos
-- Docker + Docker Compose
-- (Opcional) Python 3.12 para executar scripts locais
-
 ## Configuracao
-Edite `config/.env` com sua API key e credenciais do banco da aplicacao:
+1. Crie `config/.env` a partir do exemplo:
+```bash
+cp config/.env.example config/.env
+```
 
+2. Preencha sua API key no `config/.env`:
 ```env
 api_key='SUA_API_KEY'
 WEATHER_DB_HOST='weather-postgres'
@@ -46,41 +59,78 @@ WEATHER_DB_USER='admin'
 WEATHER_DB_PASSWORD='admin'
 ```
 
-## Subir o ambiente
+## Subir ambiente
 ```bash
 docker compose up -d
 ```
 
-Servicos principais:
-- Airflow UI: `http://localhost:8080`
-- Postgres da aplicacao (host local): `localhost:5433`
+URLs/portas:
+- Airflow: `http://localhost:8080`
+- PostgreSQL analítico: `localhost:5433`
 
-## Executar a DAG
-1. Abra o Airflow em `http://localhost:8080`.
-2. Ative a DAG `weather_pipeline`.
-3. Clique em `Trigger DAG`.
-4. Confira as tasks `extract`, `transform` e `load` em `success`.
+## Camadas do DW
+### `raw`
+- Tabela: `raw.weather_observations`
+- Estratégia: `upsert` incremental por `(city_id, datetime)`.
 
-## Validar dados no banco da aplicacao
-Parametros de conexao:
+### `intermediate`
+- Modelo dbt: `intermediate.int_weather_observations`
+- Padronização e colunas derivadas em português (`hora_observacao`, `data_referencia`, `chave_grao_clima`).
+- Datas padronizadas para horário local de Brasília (`America/Sao_Paulo`), sem offset.
 
-```text
-host: localhost
-port: 5433
-database: weather_data
-user: admin
-password: admin
+### `mart`
+- `mart.mart_weather_readings` (incremental): pronto para fatos no Power BI.
+- `mart.mart_weather_daily_city` (view): agregações diárias por cidade.
+- Datas de consumo em horário de Brasília (ideal para visualização no Power BI).
+- Coluna adicional `data_observacao_formatada` no padrão `YYYY-MM-DD HH24:MI:SS`.
+
+## Como executar
+1. Ative a DAG `weather_pipeline` no Airflow.
+2. Faça `Trigger DAG`.
+3. Verifique as tasks em `success`: `extract`, `transform`, `load`, `build_dw`.
+
+## Consultas de validação
+```sql
+-- RAW
+SELECT count(*) FROM raw.weather_observations;
+
+-- INTERMEDIATE
+SELECT count(*) FROM intermediate.int_weather_observations;
+
+-- MART
+SELECT count(*) FROM mart.mart_weather_readings;
+SELECT * FROM mart.mart_weather_daily_city ORDER BY data_referencia DESC LIMIT 20;
+
+-- Validar formato horário Brasil (sem offset) na mart
+SELECT data_observacao
+FROM mart.mart_weather_readings
+ORDER BY data_observacao DESC
+LIMIT 5;
+
+-- Validar string formatada (YYYY-MM-DD HH:MM:SS)
+SELECT data_observacao_formatada
+FROM mart.mart_weather_readings
+ORDER BY data_observacao DESC
+LIMIT 5;
 ```
 
-Tabela carregada pela DAG:
-- `the_weather`
+## Documentação dbt
+```bash
+docker compose exec -T airflow-scheduler dbt docs generate \
+  --project-dir /opt/airflow/dbt_weather \
+  --profiles-dir /opt/airflow/dbt_weather \
+  --target dev
+```
 
-## Problemas comuns
-- Erro `Connection refused` no `load`:
-  Isso acontece quando a app tenta conectar em `localhost` de dentro do container. O host correto entre containers e `weather-postgres`.
-- DAG nao aparece no Airflow:
-  Verifique o mount de `./dags:/opt/airflow/dags` e se o arquivo `dags/weather_dag.py` esta sem erro de sintaxe.
+Guia completo da parte dbt:
+- `GUIA_DBT_WEATHER.md`
 
-## Guia tecnico detalhado
-Para entender o por que de cada etapa e como replicar em novos projetos:
-- `GUIA_ETL_DOCKER_AIRFLOW.md`
+## Guias do projeto
+- `GUIA_COMPLETO_PROJETO.md` -> onboarding completo (iniciante ao avançado)
+- `GUIA_ETL_DOCKER_AIRFLOW.md` -> fundamentos técnicos de ETL + Airflow + Docker
+- `GUIA_DBT_WEATHER.md` -> modelagem dbt, testes e documentação
+
+## Observações
+- O `dbt` roda dentro do Airflow via task Python (`src/dbt_runner.py`).
+- Dependências dbt são instaladas no startup dos containers via `_PIP_ADDITIONAL_REQUIREMENTS`.
+- Para ambiente de produção, recomenda-se imagem customizada do Airflow com dbt pré-instalado.

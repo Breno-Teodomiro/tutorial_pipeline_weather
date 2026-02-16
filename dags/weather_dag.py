@@ -7,8 +7,9 @@ import os
 sys.path.insert(0, '/opt/airflow/src')
 
 from extract_data import extract_weather_data
-from load_data import load_weather_data
+from load_data import load_weather_to_raw
 from transform_data import data_transformations
+from dbt_runner import run_dbt_build
 from dotenv import load_dotenv
 
 env_path = Path(__file__).resolve().parent.parent / 'config' / '.env'
@@ -46,8 +47,12 @@ def weather_pipeline():
     def load():
         import pandas as pd
         df = pd.read_parquet('/opt/airflow/data/temp_data.parquet')
-        load_weather_data('the_weather', df)
+        load_weather_to_raw(df)
+
+    @task
+    def build_dw():
+        run_dbt_build()
         
-    extract() >> transform() >> load()
+    extract() >> transform() >> load() >> build_dw()
 
 weather_pipeline()

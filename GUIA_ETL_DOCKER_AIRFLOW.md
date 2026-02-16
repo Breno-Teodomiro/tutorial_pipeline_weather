@@ -70,7 +70,7 @@ Responsabilidade:
 
 Campos importantes:
 - `dag_id='weather_pipeline'`: nome da DAG.
-- `schedule='0 */1 * * *'`: roda de hora em hora.
+- `schedule='*/5 * * * *'`: roda a cada 5 minutos.
 - `retries=2`: reduz falha por erro transitorio.
 - `catchup=False`: nao roda historico retroativo automaticamente.
 
@@ -145,3 +145,24 @@ Checklist de replicacao:
 2. Criar testes automatizados para `transform` e `load`.
 3. Adicionar validacoes de esquema antes do `to_sql`.
 4. Trocar `to_sql` simples por estrategia de upsert/deduplicacao.
+
+## 9. Evolucao aplicada: DW com dbt (raw/intermediate/mart)
+Implementacao adotada neste projeto:
+1. `load_data.py` cria schemas `raw`, `intermediate` e `mart`.
+2. A carga bruta entra em `raw.weather_observations`.
+3. O `upsert` incremental usa `ON CONFLICT (city_id, datetime)`.
+4. Depois da carga RAW, a DAG executa `dbt run`.
+5. O dbt materializa:
+   - `intermediate.int_weather_observations` (incremental)
+   - `mart.mart_weather_readings` (incremental)
+   - `mart.mart_weather_daily_city` (view)
+6. Em `intermediate` e `mart`, `data_observacao` fica em horário de Brasília (`America/Sao_Paulo`) sem offset, facilitando uso em dashboard.
+7. Na `mart`, existe também `data_observacao_formatada` (`YYYY-MM-DD HH24:MI:SS`) para padronização visual.
+
+Por que esse desenho e profissional:
+- Separa ingestao de modelagem analitica.
+- Permite reprocessamento controlado no dbt sem alterar RAW.
+- Simplifica consumo no Power BI com camadas estaveis.
+
+Guia dedicado do dbt neste projeto:
+- `GUIA_DBT_WEATHER.md`

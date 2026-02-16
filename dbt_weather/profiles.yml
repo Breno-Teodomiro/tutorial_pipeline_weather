@@ -1,0 +1,15 @@
+weather_dw:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: "{{ env_var('WEATHER_DB_HOST', 'weather-postgres') }}"
+      port: "{{ env_var('WEATHER_DB_PORT', '5432') | int }}"
+      user: "{{ env_var('WEATHER_DB_USER', 'admin') }}"
+      password: "{{ env_var('WEATHER_DB_PASSWORD', 'admin') }}"
+      dbname: "{{ env_var('WEATHER_DB_NAME', 'weather_data') }}"
+      schema: raw
+      threads: 4
+      keepalives_idle: 0
+      connect_timeout: 10
+      retries: 2
