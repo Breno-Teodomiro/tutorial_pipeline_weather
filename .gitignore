@@ -9,5 +9,15 @@ wheels/
 # Virtual environments
 .venv
 
-# config files
+# Config files
 *.cfg
+.env
+config/.env
+
+# Airflow/runtime artifacts
+logs/
+data/weather_data.json
+data/temp_data.parquet
+
+# Notebook checkpoints
+.ipynb_checkpoints/

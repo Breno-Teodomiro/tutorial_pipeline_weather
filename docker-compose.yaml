@@ -62,7 +62,7 @@ x-airflow-common:
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
     AIRFLOW__CORE__FERNET_KEY: ''
     AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION: 'true'
-    AIRFLOW__CORE__LOAD_EXAMPLES: 'true'
+    AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
     AIRFLOW__CORE__EXECUTION_API_SERVER_URL: 'http://airflow-apiserver:8080/execution/'
     # yamllint disable rule:line-length
     # Use simple http server on scheduler for health checks
@@ -88,6 +88,8 @@ x-airflow-common:
       condition: service_healthy
     postgres:
       condition: service_healthy
+    weather-postgres:
+      condition: service_healthy
 
 services:
   postgres:
@@ -103,6 +105,23 @@ services:
       interval: 10s
       retries: 5
       start_period: 5s
+    restart: always
+
+  weather-postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: weather_data
+    volumes:
+      - weather-postgres-db-volume:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "admin", "-d", "weather_data"]
+      interval: 10s
+      retries: 5
+      start_period: 10s
     restart: always
 
   redis:
@@ -337,3 +356,4 @@ services:
 
 volumes:
   postgres-db-volume:
+  weather-postgres-db-volume:
